@@ -1,0 +1,20 @@
+spring:
+  application:
+    name: docker_boot
+  datasource:
+#    url: jdbc:mysql://192.168.159.100:3306/hbb_demo?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://mysql:3306/hbb_demo?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8&allowPublicKeyRetrieval=true
+    username: root
+    password: 123456
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  # spring boot 2.6.x或更高版本集成Swagger时，直接运行会出现异常信息报错（空指针），
+  # 主要原因是：Spring Boot 2.6及更高版本使用的默认路径匹配规则是PathPatternMatcher，而Springfox使用的路径匹配是基于AntPathMatcher的。
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+  redis:
+    host: redis
+    port: 6379
+    database: 0
+server:
+  port: 6001

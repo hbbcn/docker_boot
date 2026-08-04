@@ -1,0 +1,74 @@
+version: '3.8'
+
+volumes:
+  grafana_data:
+    name: grafana_data
+  influxdb_data:
+    name: influxdb_data
+
+networks:
+  monitoring:
+    name: monitoring
+    driver: bridge
+
+services:
+  # ============ InfluxDB（时序数据库） ============
+  influxdb:
+    image: influxdb:1.8
+    container_name: influxdb
+    restart: always
+    environment:
+      - INFLUXDB_DB=cadvisor
+      - INFLUXDB_HTTP_ENABLED=true
+      - INFLUXDB_ADMIN_USER=root
+      - INFLUXDB_ADMIN_PASSWORD=root
+    ports:
+      - "8086:8086"   # HTTP API
+      - "8083:8083"   # Web UI（1.8版本）
+    volumes:
+      - influxdb_data:/var/lib/influxdb
+    networks:
+      - monitoring
+
+  # ============ cAdvisor（容器监控） ============
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: cadvisor
+    restart: always
+    ports:
+      - "8080:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    command:
+      - -storage_driver=influxdb
+      - -storage_driver_db=cadvisor
+      - -storage_driver_host=influxdb:8086
+    depends_on:
+      - influxdb
+    networks:
+      - monitoring
+
+  # ============ Grafana（可视化） ============
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: always
+    user: "104"   # Grafana 默认用户 ID
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    environment:
+      # Grafana 管理员账户
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      # InfluxDB 数据源配置（自动添加）
+      - GF_INSTALL_PLUGINS=
+    depends_on:
+      - influxdb
+    networks:
+      - monitoring
