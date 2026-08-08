@@ -1,9 +1,5 @@
 version: '3.8'
 
-volumes:
-  influxdb_data:
-  grafana_data:
-
 services:
   # 1. InfluxDB（时序数据库，存储监控数据）
   influxdb:
@@ -17,7 +13,7 @@ services:
       - INFLUXDB_HTTP_AUTH_ENABLED=false   # 简化配置，暂不开启认证
       - INFLUXDB_DB=cadvisor               # 自动创建数据库（仅适用于 1.x 版本）
     volumes:
-      - influxdb_data:/var/lib/influxdb  # 数据持久化
+      - ./influxdb/data:/var/lib/influxdb  # 数据持久化
     networks:
       - monitoring
 
@@ -54,7 +50,9 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD=admin    # 管理员密码（默认 admin/admin）
       - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource
     volumes:
-      - grafana_data:/var/lib/grafana         # Grafana 数据持久化
+      - ./grafana/data:/var/lib/grafana     # Grafana 数据持久化
+      - ./grafana/logs:/var/log/grafana     # 日志目录
+      - ./grafana/config:/etc/grafana       # 配置文件目录（可选）
     depends_on:
       - influxdb
     networks:
